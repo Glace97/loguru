@@ -79,6 +79,7 @@ import itertools
 import logging
 import re
 import sys
+import time
 import warnings
 from collections import namedtuple
 from inspect import isclass, iscoroutinefunction, isgeneratorfunction
@@ -217,8 +218,24 @@ class Logger:
     You should not instantiate a |Logger| by yourself, use ``from loguru import logger`` instead.
     """
 
-    def __init__(self, core, exception, depth, record, lazy, colors, raw, capture, patchers, extra):
+    def __init__(
+        self,
+        core,
+        exception,
+        depth,
+        record,
+        lazy,
+        colors,
+        raw,
+        capture,
+        patchers,
+        extra,
+        limit_info=None,
+        time_limit=None,
+    ):
         self._core = core
+        self._limit_info = limit_info
+        self._time_limit = time_limit
         self._options = (exception, depth, record, lazy, colors, raw, capture, patchers, extra)
 
     def __repr__(self):
@@ -1355,6 +1372,32 @@ class Logger:
         args = self._options[-2:]
         return Logger(self._core, exception, depth, record, lazy, colors, raw, capture, *args)
 
+    def limit(self, frequency_limit, time_limit, overflow_msg=None):
+        # Initiate timer
+
+        limit_info = {
+            "frequency_limit": frequency_limit,
+            "end_time": time.time(),
+            "overflow_msg": overflow_msg,
+            "frequency": 0,
+        }
+
+        # Return a new Logger object, this allows the returned logger to be used for limiting the logging of specific logs.
+        args = self._options[-2:]
+        return Logger(
+            self._core,
+            None,
+            0,
+            False,
+            False,
+            False,
+            False,
+            True,
+            *args,
+            limit_info=limit_info,
+            time_limit=time_limit,
+        )
+
     def bind(__self, **kwargs):  # noqa: N805
         """Bind attributes to the ``extra`` dict of each logged message record.
 
@@ -1879,127 +1922,147 @@ class Logger:
         if not core.handlers:
             return
 
-        try:
-            level_id, level_name, level_no, level_icon = core.levels_lookup[level]
-        except (KeyError, TypeError):
-            if isinstance(level, str):
-                raise ValueError("Level '%s' does not exist" % level) from None
-            if not isinstance(level, int):
-                raise TypeError(
-                    "Invalid level, it should be an integer or a string, not: '%s'"
-                    % type(level).__name__
-                ) from None
-            if level < 0:
-                raise ValueError(
-                    "Invalid level value, it should be a positive integer, not: %d" % level
-                ) from None
-            cache = (None, "Level %d" % level, level, " ")
-            level_id, level_name, level_no, level_icon = cache
-            core.levels_lookup[level] = cache
+        limited_log = self._limit_info
 
-        if level_no < core.min_level:
+        elapsed_time = time.time() - self._limit_info["end_time"]
+
+        if (elapsed_time > self._time_limit) and limited_log:
+            # Reset to new period
+            self._limit_info["frequency"] = 0
+            self._limit_info["end_time"] = time.time()
+
+        if (self._limit_info["frequency"] > self._limit_info["frequency_limit"]) and limited_log:
+            # Ingore logging, limit reached
             return
+        else:
+            self._limit_info["frequency"] += 1
+            if self._limit_info["frequency"] == self._limit_info["frequency_limit"] and (
+                self._limit_info["overflow_msg"] is not None and limited_log
+            ):
+                # Append warning that future messages will be supressed
+                message = message + f'Overflow: {self._limit_info["overflow_msg"]}'
 
-        (exception, depth, record, lazy, colors, raw, capture, patchers, extra) = options
+            try:
+                level_id, level_name, level_no, level_icon = core.levels_lookup[level]
+            except (KeyError, TypeError):
+                if isinstance(level, str):
+                    raise ValueError("Level '%s' does not exist" % level) from None
+                if not isinstance(level, int):
+                    raise TypeError(
+                        "Invalid level, it should be an integer or a string, not: '%s'"
+                        % type(level).__name__
+                    ) from None
+                if level < 0:
+                    raise ValueError(
+                        "Invalid level value, it should be a positive integer, not: %d" % level
+                    ) from None
+                cache = (None, "Level %d" % level, level, " ")
+                level_id, level_name, level_no, level_icon = cache
+                core.levels_lookup[level] = cache
 
-        frame = get_frame(depth + 2)
-
-        try:
-            name = frame.f_globals["__name__"]
-        except KeyError:
-            name = None
-
-        try:
-            if not core.enabled[name]:
+            if level_no < core.min_level:
                 return
-        except KeyError:
-            enabled = core.enabled
-            if name is None:
-                status = core.activation_none
-                enabled[name] = status
-                if not status:
+
+            (exception, depth, record, lazy, colors, raw, capture, patchers, extra) = options
+
+            frame = get_frame(depth + 2)
+
+            try:
+                name = frame.f_globals["__name__"]
+            except KeyError:
+                name = None
+
+            try:
+                if not core.enabled[name]:
                     return
-            else:
-                dotted_name = name + "."
-                for dotted_module_name, status in core.activation_list:
-                    if dotted_name[: len(dotted_module_name)] == dotted_module_name:
-                        if status:
-                            break
-                        enabled[name] = False
+            except KeyError:
+                enabled = core.enabled
+                if name is None:
+                    status = core.activation_none
+                    enabled[name] = status
+                    if not status:
                         return
-                enabled[name] = True
+                else:
+                    dotted_name = name + "."
+                    for dotted_module_name, status in core.activation_list:
+                        if dotted_name[: len(dotted_module_name)] == dotted_module_name:
+                            if status:
+                                break
+                            enabled[name] = False
+                            return
+                    enabled[name] = True
 
-        current_datetime = aware_now()
+            current_datetime = aware_now()
 
-        code = frame.f_code
-        file_path = code.co_filename
-        file_name = basename(file_path)
-        thread = current_thread()
-        process = current_process()
-        elapsed = current_datetime - start_time
+            code = frame.f_code
+            file_path = code.co_filename
+            file_name = basename(file_path)
+            thread = current_thread()
+            process = current_process()
+            elapsed = current_datetime - start_time
 
-        if exception:
-            if isinstance(exception, BaseException):
-                type_, value, traceback = (type(exception), exception, exception.__traceback__)
-            elif isinstance(exception, tuple):
-                type_, value, traceback = exception
+            if exception:
+                if isinstance(exception, BaseException):
+                    type_, value, traceback = (type(exception), exception, exception.__traceback__)
+                elif isinstance(exception, tuple):
+                    type_, value, traceback = exception
+                else:
+                    type_, value, traceback = sys.exc_info()
+                exception = RecordException(type_, value, traceback)
             else:
-                type_, value, traceback = sys.exc_info()
-            exception = RecordException(type_, value, traceback)
-        else:
-            exception = None
+                exception = None
 
-        log_record = {
-            "elapsed": elapsed,
-            "exception": exception,
-            "extra": {**core.extra, **context.get(), **extra},
-            "file": RecordFile(file_name, file_path),
-            "function": code.co_name,
-            "level": RecordLevel(level_name, level_no, level_icon),
-            "line": frame.f_lineno,
-            "message": str(message),
-            "module": splitext(file_name)[0],
-            "name": name,
-            "process": RecordProcess(process.ident, process.name),
-            "thread": RecordThread(thread.ident, thread.name),
-            "time": current_datetime,
-        }
+            log_record = {
+                "elapsed": elapsed,
+                "exception": exception,
+                "extra": {**core.extra, **context.get(), **extra},
+                "file": RecordFile(file_name, file_path),
+                "function": code.co_name,
+                "level": RecordLevel(level_name, level_no, level_icon),
+                "line": frame.f_lineno,
+                "message": str(message),
+                "module": splitext(file_name)[0],
+                "name": name,
+                "process": RecordProcess(process.ident, process.name),
+                "thread": RecordThread(thread.ident, thread.name),
+                "time": current_datetime,
+            }
 
-        if lazy:
-            args = [arg() for arg in args]
-            kwargs = {key: value() for key, value in kwargs.items()}
+            if lazy:
+                args = [arg() for arg in args]
+                kwargs = {key: value() for key, value in kwargs.items()}
 
-        if capture and kwargs:
-            log_record["extra"].update(kwargs)
+            if capture and kwargs:
+                log_record["extra"].update(kwargs)
 
-        if record:
-            if "record" in kwargs:
-                raise TypeError(
-                    "The message can't be formatted: 'record' shall not be used as a keyword "
-                    "argument while logger has been configured with '.opt(record=True)'"
-                )
-            kwargs.update(record=log_record)
+            if record:
+                if "record" in kwargs:
+                    raise TypeError(
+                        "The message can't be formatted: 'record' shall not be used as a keyword "
+                        "argument while logger has been configured with '.opt(record=True)'"
+                    )
+                kwargs.update(record=log_record)
 
-        if colors:
-            if args or kwargs:
-                colored_message = Colorizer.prepare_message(message, args, kwargs)
+            if colors:
+                if args or kwargs:
+                    colored_message = Colorizer.prepare_message(message, args, kwargs)
+                else:
+                    colored_message = Colorizer.prepare_simple_message(str(message))
+                log_record["message"] = colored_message.stripped
+            elif args or kwargs:
+                colored_message = None
+                log_record["message"] = message.format(*args, **kwargs)
             else:
-                colored_message = Colorizer.prepare_simple_message(str(message))
-            log_record["message"] = colored_message.stripped
-        elif args or kwargs:
-            colored_message = None
-            log_record["message"] = message.format(*args, **kwargs)
-        else:
-            colored_message = None
+                colored_message = None
 
-        if core.patcher:
-            core.patcher(log_record)
+            if core.patcher:
+                core.patcher(log_record)
 
-        for patcher in patchers:
-            patcher(log_record)
+            for patcher in patchers:
+                patcher(log_record)
 
-        for handler in core.handlers.values():
-            handler.emit(log_record, level_id, from_decorator, raw, colored_message)
+            for handler in core.handlers.values():
+                handler.emit(log_record, level_id, from_decorator, raw, colored_message)
 
     def trace(__self, __message, *args, **kwargs):  # noqa: N805
         r"""Log ``message.format(*args, **kwargs)`` with severity ``'TRACE'``."""
