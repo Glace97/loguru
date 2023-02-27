@@ -1377,7 +1377,7 @@ class Logger:
 
         limit_info = {
             "frequency_limit": frequency_limit,
-            "end_time": time.time(),
+            "start_time": time.time(),
             "overflow_msg": overflow_msg,
             "frequency": 0,
         }
@@ -1923,12 +1923,12 @@ class Logger:
             return
 
         if self._limit_info != None:
-            elapsed_time = time.time() - self._limit_info["end_time"]
+            elapsed_time = time.time() - self._limit_info["start_time"]
 
             if elapsed_time > self._time_limit:
                 # Reset to new period
                 self._limit_info["frequency"] = 0
-                self._limit_info["end_time"] = time.time()
+                self._limit_info["start_time"] = time.time()
 
             if self._limit_info["frequency"] > self._limit_info["frequency_limit"]:
                 # Ingore logging, limit reached
