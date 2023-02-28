@@ -1372,30 +1372,95 @@ class Logger:
         args = self._options[-2:]
         return Logger(self._core, exception, depth, record, lazy, colors, raw, capture, *args)
 
-    def limit(self, frequency_limit, time_limit, overflow_msg=None):
-        # Initiate timer
+    def limit(
+        self,
+        frequency_limit,
+        time_limit,
+        *,
+        overflow_msg="Overflow, future logs will be suppressed",
+        exception=None,
+        record=False,
+        lazy=False,
+        colors=False,
+        raw=False,
+        capture=True,
+        depth=0,
+        ansi=False
+    ):
+        """
+        Description
+
+        Parameters
+        ----------
+        frequency_limit : |int|
+            Limit to how often the logger will log messages.
+        time_limit : |int|
+            A period of time given in minutes. During the period, no more than frequency_limit number
+            of logs should be logged.
+        overflow_msg: |str|, optional
+            Message to be logged when frequency limit has been exceeded.
+        exception : |bool|, |tuple| or |Exception|, optional
+            If it does not evaluate as ``False``, the passed exception is formatted and added to the
+            log message. It could be an |Exception| object or a ``(type, value, traceback)`` tuple,
+            otherwise the exception information is retrieved from |sys.exc_info|.
+        record : |bool|, optional
+            If ``True``, the record dict contextualizing the logging call can be used to format the
+            message by using ``{record[key]}`` in the log message.
+        lazy : |bool|, optional
+            If ``True``, the logging call attribute to format the message should be functions which
+            will be called only if the level is high enough. This can be used to avoid expensive
+            functions if not necessary.
+        colors : |bool|, optional
+            If ``True``, logged message will be colorized according to the markups it possibly
+            contains.
+        raw : |bool|, optional
+            If ``True``, the formatting of each sink will be bypassed and the message will be sent
+            as is.
+        capture : |bool|, optional
+            If ``False``, the ``**kwargs`` of logged message will not automatically populate
+            the ``extra`` dict (although they are still used for formatting).
+        depth : |int|, optional
+            Specify which stacktrace should be used to contextualize the logged message. This is
+            useful while using the logger from inside a wrapped function to retrieve worthwhile
+            information.
+        ansi : |bool|, optional
+            Deprecated since version 0.4.1: the ``ansi`` parameter will be removed in Loguru 1.0.0,
+            it is replaced by ``colors`` which is a more appropriate name.
+
+        Returns
+        -------
+        :class:`~Logger`
+            A logger wrapping the core logger, but transforming logged message adequately before
+            sending.
+        """
+        if ansi:
+            colors = True
+            warnings.warn(
+                "The 'ansi' parameter is deprecated, please use 'colors' instead",
+                DeprecationWarning,
+            )
 
         limit_info = {
             "frequency_limit": frequency_limit,
-            "start_time": time.time(),
             "overflow_msg": overflow_msg,
             "frequency": 0,
+            "timestamps": [None] * frequency_limit
         }
 
         # Return a new Logger object, this allows the returned logger to be used for limiting the logging of specific logs.
         args = self._options[-2:]
         return Logger(
             self._core,
-            None,
-            0,
-            False,
-            False,
-            False,
-            False,
-            True,
+            exception,
+            depth,
+            record,
+            lazy,
+            colors,
+            raw,
+            capture,
             *args,
             limit_info=limit_info,
-            time_limit=time_limit,
+            time_limit=time_limit * 60,
         )
 
     def bind(__self, **kwargs):  # noqa: N805
@@ -1916,33 +1981,61 @@ class Logger:
                 buffer = buffer[end:]
                 yield from matches[:-1]
 
+    def _log_limit_helper(self, message):
+        """
+        Checks limitations for logging. If limit frequency has been reached within the time limit
+        an overflow message is logged once, after that nothing gets logged.
+
+        PARAMETERS
+        ----------
+        message: |str|
+            Is intially the orginal message to be logged. In the case of the freqency threshold being reached,
+            the message is either set to the overflow_msg(default or provided), or an empty string in the case
+            of the log being supressed.
+        """
+        if self._limit_info["timestamps"][0] is not None:
+            # Check oldest timestamp, if it is out of time range,
+            # pop it out to make room for a new timestamp
+            elapsed_time = time.time() - self._limit_info["timestamps"][0]
+            if elapsed_time > self._time_limit:
+                self._limit_info["timestamps"].pop(0)
+                # maintain same size for the list of timestamps
+                self._limit_info["timestamps"].append(None)
+                if self._limit_info["frequency"] > self._limit_info["frequency_limit"]:
+                    # We have ignored logging previously therefore
+                    # the frequency is adjusted by two
+                    self._limit_info["frequency"] -= 2
+                else:
+                    # We have overflooded previously therefore
+                    # the frequency is adjusted by one
+                    self._limit_info["frequency"] -= 1
+
+        if self._limit_info["frequency"] == self._limit_info["frequency_limit"]:
+            # Overflow - Change message to overflow message
+            # Increment frequency by one to identify next time that overflooding has been logged
+            self._limit_info["frequency"] += 1
+            message = self._limit_info["overflow_msg"]
+        elif self._limit_info["frequency"] > self._limit_info["frequency_limit"]:
+            # Ingore logging, limit reached and overflow message has already been logged
+            return False, ""
+        else:
+            # Save timestamp for logged message
+            self._limit_info["frequency"] += 1
+            index = self._limit_info["frequency"] - 1
+            self._limit_info["timestamps"][index] = time.time()
+        return True, message
+
     def _log(self, level, from_decorator, options, message, args, kwargs):
         core = self._core
 
         if not core.handlers:
             return
 
-        if self._limit_info != None:
-            elapsed_time = time.time() - self._limit_info["start_time"]
-
-            if elapsed_time > self._time_limit:
-                # Reset to new period
-                self._limit_info["frequency"] = 0
-                self._limit_info["start_time"] = time.time()
-
-            if self._limit_info["frequency"] > self._limit_info["frequency_limit"]:
-                # Ingore logging, limit reached
+        if self._limit_info is not None:
+            should_log, message = self._log_limit_helper(message)
+            if not should_log:
+                # Limit reached
                 return
-
-            # Otherwise, increase frequency
-            self._limit_info["frequency"] += 1
-
-            if self._limit_info["frequency"] == self._limit_info["frequency_limit"] and (
-                self._limit_info["overflow_msg"] is not None
-            ):
-                # Append warning that future messages will be supressed
-                message = message + f'Overflow: {self._limit_info["overflow_msg"]}'
-
         try:
             level_id, level_name, level_no, level_icon = core.levels_lookup[level]
         except (KeyError, TypeError):
