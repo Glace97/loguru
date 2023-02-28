@@ -1,3 +1,7 @@
+"""
+The following testcases checks limit() for all logging levels.
+"""
+
 from time import sleep
 from loguru import logger
 
@@ -97,10 +101,26 @@ def test_limit_no_overflow_msg_provided(writer):
     )
     default_overflow_msg = "Overflow, future logs will be suppressed"
     for _ in range(3):
-        limit_logger.debug("test")
+        limit_logger.log("WARNING", "test")
 
     lines = writer.read().strip().splitlines()
 
+    print("lines", lines)
     assert lines[0] == "test"
     assert len(lines) == 2
     assert lines[-1] == default_overflow_msg
+
+
+def test_limit_exception_function(writer):
+    logger.add(writer, format="{message}")
+    limit_logger = logger.limit(
+        frequency_limit=1, time_limit=1
+    )
+    for _ in range(3):
+        limit_logger.exception("test")
+
+    lines = writer.read().strip().splitlines()
+
+    print("lines", lines)
+    assert lines[0] == "test"
+    assert len(lines) == 4
