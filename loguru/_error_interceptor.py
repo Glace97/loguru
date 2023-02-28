@@ -17,16 +17,10 @@ class ErrorInterceptor:
         if exception is None:
             type_, value, traceback_ = sys.exc_info()
         else:
-            type_, value, traceback_ = (
-                type(exception),
-                exception,
-                exception.__traceback__,
-            )
+            type_, value, traceback_ = (type(exception), exception, exception.__traceback__)
 
         try:
-            sys.stderr.write(
-                "--- Logging error in Loguru Handler #%d ---\n" % self._handler_id
-            )
+            sys.stderr.write("--- Logging error in Loguru Handler #%d ---\n" % self._handler_id)
             try:
                 record_repr = str(record)
             except Exception:

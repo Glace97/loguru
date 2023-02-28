@@ -135,9 +135,7 @@ else:
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
-ExcInfo = Tuple[
-    Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]
-]
+ExcInfo = Tuple[Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]]
 
 class _GeneratorContextManager(ContextManager[_T], Generic[_T]):
     def __call__(self, func: _F) -> _F: ...
@@ -300,9 +298,7 @@ class Logger:
         level: Union[str, int] = ...,
         reraise: bool = ...,
         onerror: Optional[Callable[[BaseException], None]] = ...,
-        exclude: Optional[
-            Union[Type[BaseException], Tuple[Type[BaseException], ...]]
-        ] = ...,
+        exclude: Optional[Union[Type[BaseException], Tuple[Type[BaseException], ...]]] = ...,
         default: Any = ...,
         message: str = ...
     ) -> Catcher: ...
@@ -327,11 +323,7 @@ class Logger:
     def level(self, name: str) -> Level: ...
     @overload
     def level(
-        self,
-        name: str,
-        no: int = ...,
-        color: Optional[str] = ...,
-        icon: Optional[str] = ...,
+        self, name: str, no: int = ..., color: Optional[str] = ..., icon: Optional[str] = ...
     ) -> Level: ...
     @overload
     def level(
@@ -362,9 +354,7 @@ class Logger:
         file: Union[str, PathLikeStr, TextIO],
         pattern: Union[str, Pattern[str]],
         *,
-        cast: Union[
-            Dict[str, Callable[[str], Any]], Callable[[Dict[str, str]], None]
-        ] = ...,
+        cast: Union[Dict[str, Callable[[str], Any]], Callable[[Dict[str, str]], None]] = ...,
         chunk: int = ...
     ) -> Generator[Dict[str, Any], None, None]: ...
     @overload
@@ -373,9 +363,7 @@ class Logger:
         file: BinaryIO,
         pattern: Union[bytes, Pattern[bytes]],
         *,
-        cast: Union[
-            Dict[str, Callable[[bytes], Any]], Callable[[Dict[str, bytes]], None]
-        ] = ...,
+        cast: Union[Dict[str, Callable[[bytes], Any]], Callable[[Dict[str, bytes]], None]] = ...,
         chunk: int = ...
     ) -> Generator[Dict[str, Any], None, None]: ...
     @overload

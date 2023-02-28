@@ -364,9 +364,7 @@ def test_remove_in_main_process_inheritance(fork_context):
 
     logger.add(writer, format="{message}", enqueue=True, catch=False)
 
-    process = fork_context.Process(
-        target=subworker_barrier_inheritance, args=(barrier,)
-    )
+    process = fork_context.Process(target=subworker_barrier_inheritance, args=(barrier,))
     process.start()
     barrier.wait()
     logger.info("Main")
@@ -486,9 +484,7 @@ def test_not_picklable_sinks_fork(capsys, tmp_path, fork_context):
 
     logger.add(filepath, format="{message}", enqueue=True, catch=False)
     logger.add(stream, format="{message}", enqueue=True, catch=False)
-    logger.add(
-        lambda m: output.append(m), format="{message}", enqueue=True, catch=False
-    )
+    logger.add(lambda m: output.append(m), format="{message}", enqueue=True, catch=False)
 
     process = fork_context.Process(target=subworker, args=[logger])
     process.start()
@@ -515,9 +511,7 @@ def test_not_picklable_sinks_inheritance(capsys, tmp_path, fork_context):
 
     logger.add(filepath, format="{message}", enqueue=True, catch=False)
     logger.add(stream, format="{message}", enqueue=True, catch=False)
-    logger.add(
-        lambda m: output.append(m), format="{message}", enqueue=True, catch=False
-    )
+    logger.add(lambda m: output.append(m), format="{message}", enqueue=True, catch=False)
 
     process = fork_context.Process(target=subworker_inheritance)
     process.start()
@@ -537,14 +531,10 @@ def test_not_picklable_sinks_inheritance(capsys, tmp_path, fork_context):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="Windows does not support forking")
-@pytest.mark.skipif(
-    sys.version_info < (3, 7), reason="No 'os.register_at_fork()' function"
-)
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="No 'os.register_at_fork()' function")
 @pytest.mark.parametrize("enqueue", [True, False])
 @pytest.mark.parametrize("deepcopied", [True, False])
-def test_no_deadlock_if_internal_lock_in_use(
-    tmp_path, enqueue, deepcopied, fork_context
-):
+def test_no_deadlock_if_internal_lock_in_use(tmp_path, enqueue, deepcopied, fork_context):
     if deepcopied:
         logger_ = copy.deepcopy(logger)
     else:
@@ -582,9 +572,7 @@ def test_no_deadlock_if_internal_lock_in_use(
     assert output.read_text() in ("Main\nChild\n", "Child\nMain\n")
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 7), reason="No 'os.register_at_fork()' function"
-)
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="No 'os.register_at_fork()' function")
 @pytest.mark.skipif(os.name == "nt", reason="Windows does not support forking")
 @pytest.mark.parametrize("enqueue", [True, False])
 def test_no_deadlock_if_external_lock_in_use(enqueue, capsys, fork_context):
@@ -607,9 +595,7 @@ def test_no_deadlock_if_external_lock_in_use(enqueue, capsys, fork_context):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="Windows does not support forking")
-@pytest.mark.skipif(
-    platform.python_implementation() == "PyPy", reason="PyPy is too slow"
-)
+@pytest.mark.skipif(platform.python_implementation() == "PyPy", reason="PyPy is too slow")
 def test_complete_from_multiple_child_processes(capsys, fork_context):
     logger.add(lambda _: None, enqueue=True, catch=False)
     num = 100

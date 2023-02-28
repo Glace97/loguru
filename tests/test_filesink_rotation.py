@@ -80,9 +80,7 @@ def test_no_renaming(freeze_time, tmp_path):
 @pytest.mark.parametrize("size", [8, 8.0, 7.99, "8 B", "8e-6MB", "0.008 kiB", "64b"])
 def test_size_rotation(freeze_time, tmp_path, size):
     with freeze_time("2018-01-01 00:00:00") as frozen:
-        i = logger.add(
-            tmp_path / "test_{time}.log", format="{message}", rotation=size, mode="w"
-        )
+        i = logger.add(tmp_path / "test_{time}.log", format="{message}", rotation=size, mode="w")
 
         frozen.tick()
         logger.debug("abcde")
@@ -168,9 +166,7 @@ def test_time_rotation(freeze_time, tmp_path, when, hours):
 
 def test_time_rotation_dst(freeze_time, tmp_path):
     with freeze_time("2018-10-27 05:00:00", ("CET", 3600)):
-        i = logger.add(
-            tmp_path / "test_{time}.log", format="{message}", rotation="1 day"
-        )
+        i = logger.add(tmp_path / "test_{time}.log", format="{message}", rotation="1 day")
         logger.debug("First")
 
         with freeze_time("2018-10-28 05:30:00", ("CEST", 7200)):
@@ -196,9 +192,7 @@ def test_time_rotation_with_tzinfo_diff_bigger(freeze_time, tmp_path):
         tzinfo = datetime.timezone(datetime.timedelta(seconds=7200))
         rotation = datetime.time(7, 0, 0, tzinfo=tzinfo)
 
-        i = logger.add(
-            tmp_path / "test_{time}.log", format="{message}", rotation=rotation
-        )
+        i = logger.add(tmp_path / "test_{time}.log", format="{message}", rotation=rotation)
 
         frozen.tick(delta=datetime.timedelta(minutes=30))
         logger.debug("First")
@@ -221,9 +215,7 @@ def test_time_rotation_with_tzinfo_diff_lower(freeze_time, tmp_path):
         tzinfo = datetime.timezone(datetime.timedelta(seconds=3600))
         rotation = datetime.time(6, 0, 0, tzinfo=tzinfo)
 
-        i = logger.add(
-            tmp_path / "test_{time}.log", format="{message}", rotation=rotation
-        )
+        i = logger.add(tmp_path / "test_{time}.log", format="{message}", rotation=rotation)
 
         frozen.tick(delta=datetime.timedelta(minutes=30))
         logger.debug("First")
@@ -331,19 +323,13 @@ def test_daily_rotation_with_different_timezone(freeze_time, tmp_path, offset):
     "rotation",
     [
         datetime.time(1, 30, 0, tzinfo=datetime.timezone.utc),
-        datetime.time(
-            2, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))
-        ),
-        datetime.time(
-            0, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=-3600))
-        ),
+        datetime.time(2, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))),
+        datetime.time(0, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=-3600))),
         datetime.time(3, 30, 0),
         "03:30:00",
     ],
 )
-def test_time_rotation_after_positive_timezone_changes_forward(
-    freeze_time, tmp_path, rotation
-):
+def test_time_rotation_after_positive_timezone_changes_forward(freeze_time, tmp_path, rotation):
     with freeze_time("2018-10-27 02:00:00", ("CET", 3600)):
         i = logger.add(
             tmp_path / "test_{time:YYYY-MM-DD_HH-mm-ss!UTC}.log",
@@ -370,9 +356,7 @@ def test_time_rotation_after_positive_timezone_changes_forward(
 
 
 @pytest.mark.parametrize("rotation", [datetime.time(2, 30, 0), "02:30:00"])
-def test_time_rotation_when_positive_timezone_changes_forward(
-    freeze_time, tmp_path, rotation
-):
+def test_time_rotation_when_positive_timezone_changes_forward(freeze_time, tmp_path, rotation):
     with freeze_time("2018-10-27 02:00:00", ("CET", 3600)):
         i = logger.add(
             tmp_path / "test_{time:YYYY-MM-DD_HH-mm-ss}.log",
@@ -402,19 +386,13 @@ def test_time_rotation_when_positive_timezone_changes_forward(
     "rotation",
     [
         datetime.time(4, 30, 0, tzinfo=datetime.timezone.utc),
-        datetime.time(
-            5, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))
-        ),
-        datetime.time(
-            3, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=-3600))
-        ),
+        datetime.time(5, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))),
+        datetime.time(3, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=-3600))),
         datetime.time(3, 30, 0),
         "03:30:00",
     ],
 )
-def test_time_rotation_after_negative_timezone_changes_forward(
-    freeze_time, tmp_path, rotation
-):
+def test_time_rotation_after_negative_timezone_changes_forward(freeze_time, tmp_path, rotation):
     with freeze_time("2018-10-27 02:00:00", ("CET", -7200)):
         i = logger.add(
             tmp_path / "test_{time:YYYY-MM-DD_HH-mm-ss!UTC}.log",
@@ -441,9 +419,7 @@ def test_time_rotation_after_negative_timezone_changes_forward(
 
 
 @pytest.mark.parametrize("rotation", [datetime.time(2, 30, 0), "02:30:00"])
-def test_time_rotation_when_negative_timezone_changes_forward(
-    freeze_time, tmp_path, rotation
-):
+def test_time_rotation_when_negative_timezone_changes_forward(freeze_time, tmp_path, rotation):
     with freeze_time("2018-10-27 02:00:00", ("CET", -7200)):
         i = logger.add(
             tmp_path / "test_{time:YYYY-MM-DD_HH-mm-ss}.log",
@@ -473,12 +449,8 @@ def test_time_rotation_when_negative_timezone_changes_forward(
     "rotation",
     [
         datetime.time(1, 30, 0, tzinfo=datetime.timezone.utc),
-        datetime.time(
-            2, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))
-        ),
-        datetime.time(
-            0, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=-3600))
-        ),
+        datetime.time(2, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))),
+        datetime.time(0, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=-3600))),
     ],
 )
 def test_time_rotation_after_positive_timezone_changes_backward_aware(
@@ -544,12 +516,8 @@ def test_time_rotation_after_positive_timezone_changes_backward_naive(
     "rotation",
     [
         datetime.time(4, 30, 0, tzinfo=datetime.timezone.utc),
-        datetime.time(
-            5, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))
-        ),
-        datetime.time(
-            3, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=-3600))
-        ),
+        datetime.time(5, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))),
+        datetime.time(3, 30, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=-3600))),
     ],
 )
 def test_time_rotation_after_negative_timezone_changes_backward_aware(
@@ -611,9 +579,7 @@ def test_time_rotation_after_negative_timezone_changes_backward_naive(
     )
 
 
-def test_time_rotation_when_timezone_changes_backward_rename_file(
-    freeze_time, tmp_path
-):
+def test_time_rotation_when_timezone_changes_backward_rename_file(freeze_time, tmp_path):
     with freeze_time("2018-10-27 02:00:00", ("CET", 3600)):
         i = logger.add(
             tmp_path / "test_{time:YYYY-MM-DD_HH-mm-ss!UTC}.log",
@@ -696,9 +662,7 @@ def test_time_rotation_reopening_native(tmp_path_local, delay):
     or not hasattr(os, "getxattr"),
     reason="Testing implementation specific to Linux",
 )
-def test_time_rotation_reopening_xattr_attributeerror(
-    tmp_path_local, monkeypatch, delay
-):
+def test_time_rotation_reopening_xattr_attributeerror(tmp_path_local, monkeypatch, delay):
     monkeypatch.delattr(os, "setxattr")
     monkeypatch.delattr(os, "getxattr")
     get_ctime, set_ctime = load_ctime_functions()
@@ -760,9 +724,7 @@ def test_time_rotation_reopening_xattr_oserror(tmp_path_local, monkeypatch, dela
     assert filepath.read_text() == "3\n"
 
 
-@pytest.mark.skipif(
-    os.name != "nt", reason="Testing implementation specific to Windows"
-)
+@pytest.mark.skipif(os.name != "nt", reason="Testing implementation specific to Windows")
 def test_time_rotation_windows_no_setctime(tmp_path, monkeypatch):
     import win32_setctime
 
@@ -785,9 +747,7 @@ def test_time_rotation_windows_no_setctime(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("exception", [ValueError, OSError])
-@pytest.mark.skipif(
-    os.name != "nt", reason="Testing implementation specific to Windows"
-)
+@pytest.mark.skipif(os.name != "nt", reason="Testing implementation specific to Windows")
 def test_time_rotation_windows_setctime_exception(tmp_path, monkeypatch, exception):
     import win32_setctime
 
@@ -856,9 +816,7 @@ def test_rotation_at_remove(freeze_time, tmp_path, mode):
 
 @pytest.mark.parametrize("mode", ["a", "a+"])
 def test_no_rotation_at_remove(tmp_path, mode):
-    i = logger.add(
-        tmp_path / "test.log", rotation="10 MB", mode=mode, format="{message}"
-    )
+    i = logger.add(tmp_path / "test.log", rotation="10 MB", mode=mode, format="{message}")
     logger.debug("test")
     logger.remove(i)
 
@@ -883,11 +841,7 @@ def test_rename_existing_with_creation_time(freeze_time, tmp_path):
 
 def test_renaming_rotation_dest_exists(freeze_time, tmp_path):
     with freeze_time("2019-01-02 03:04:05.000006"):
-        logger.add(
-            tmp_path / "rotate.log",
-            rotation=Mock(return_value=True),
-            format="{message}",
-        )
+        logger.add(tmp_path / "rotate.log", rotation=Mock(return_value=True), format="{message}")
         logger.info("A")
         logger.info("B")
         logger.info("C")
@@ -906,9 +860,7 @@ def test_renaming_rotation_dest_exists(freeze_time, tmp_path):
 def test_renaming_rotation_dest_exists_with_time(freeze_time, tmp_path):
     with freeze_time("2019-01-02 03:04:05.000006"):
         logger.add(
-            tmp_path / "rotate.{time}.log",
-            rotation=Mock(return_value=True),
-            format="{message}",
+            tmp_path / "rotate.{time}.log", rotation=Mock(return_value=True), format="{message}"
         )
         logger.info("A")
         logger.info("B")
@@ -918,14 +870,8 @@ def test_renaming_rotation_dest_exists_with_time(freeze_time, tmp_path):
         tmp_path,
         files=[
             ("rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.log", ""),
-            (
-                "rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.2.log",
-                "A\n",
-            ),
-            (
-                "rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.3.log",
-                "B\n",
-            ),
+            ("rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.2.log", "A\n"),
+            ("rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.3.log", "B\n"),
             ("rotate.2019-01-02_03-04-05_000006.log", "C\n"),
         ],
     )
@@ -975,9 +921,7 @@ def test_recipe_rotation_both_size_and_time(freeze_time, tmp_path):
             now = datetime.datetime.now()
 
             self._size_limit = size
-            self._time_limit = now.replace(
-                hour=at.hour, minute=at.minute, second=at.second
-            )
+            self._time_limit = now.replace(hour=at.hour, minute=at.minute, second=at.second)
 
             if now >= self._time_limit:
                 # The current time is already past the target time so it would rotate already.
@@ -997,9 +941,7 @@ def test_recipe_rotation_both_size_and_time(freeze_time, tmp_path):
 
     with freeze_time("2020-01-01 20:00:00") as frozen:
         rotator = Rotator(size=20, at=datetime.time(12, 0, 0))
-        logger.add(
-            tmp_path / "file.log", rotation=rotator.should_rotate, format="{message}"
-        )
+        logger.add(tmp_path / "file.log", rotation=rotator.should_rotate, format="{message}")
         logger.info("A" * 15)
         frozen.tick()
         logger.info("B" * 10)

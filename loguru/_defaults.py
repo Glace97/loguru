@@ -22,8 +22,7 @@ def env(key, type_, default=None):
             return int(val)
         except ValueError:
             raise ValueError(
-                "Invalid environment variable '%s' (expected an integer): '%s'"
-                % (key, val)
+                "Invalid environment variable '%s' (expected an integer): '%s'" % (key, val)
             ) from None
 
 
@@ -59,9 +58,7 @@ LOGURU_INFO_ICON = env("LOGURU_INFO_ICON", str, "\u2139\uFE0F")  # Information
 
 LOGURU_SUCCESS_NO = env("LOGURU_SUCCESS_NO", int, 25)
 LOGURU_SUCCESS_COLOR = env("LOGURU_SUCCESS_COLOR", str, "<green><bold>")
-LOGURU_SUCCESS_ICON = env(
-    "LOGURU_SUCCESS_ICON", str, "\u2705"
-)  # White Heavy Check Mark
+LOGURU_SUCCESS_ICON = env("LOGURU_SUCCESS_ICON", str, "\u2705")  # White Heavy Check Mark
 
 LOGURU_WARNING_NO = env("LOGURU_WARNING_NO", int, 30)
 LOGURU_WARNING_COLOR = env("LOGURU_WARNING_COLOR", str, "<yellow><bold>")
@@ -73,6 +70,4 @@ LOGURU_ERROR_ICON = env("LOGURU_ERROR_ICON", str, "\u274C")  # Cross Mark
 
 LOGURU_CRITICAL_NO = env("LOGURU_CRITICAL_NO", int, 50)
 LOGURU_CRITICAL_COLOR = env("LOGURU_CRITICAL_COLOR", str, "<RED><bold>")
-LOGURU_CRITICAL_ICON = env(
-    "LOGURU_CRITICAL_ICON", str, "\u2620\uFE0F"
-)  # Skull and Crossbones
+LOGURU_CRITICAL_ICON = env("LOGURU_CRITICAL_ICON", str, "\u2620\uFE0F")  # Skull and Crossbones

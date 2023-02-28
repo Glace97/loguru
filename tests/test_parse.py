@@ -90,9 +90,7 @@ def test_cast_dict(tmp_path):
     file = tmp_path / "test.log"
     file.write_text("[123] [1.1] [2017-03-29 11:11:11]\n")
     regex = r"\[(?P<num>.*)\] \[(?P<val>.*)\] \[(?P<date>.*)\]"
-    caster = dict(
-        num=int, val=float, date=lambda d: datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
-    )
+    caster = dict(num=int, val=float, date=lambda d: datetime.strptime(d, "%Y-%m-%d %H:%M:%S"))
     result = next(logger.parse(file, regex, cast=caster))
     assert result == dict(num=123, val=1.1, date=datetime(2017, 3, 29, 11, 11, 11))
 

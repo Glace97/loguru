@@ -87,9 +87,7 @@ def aware_now():
         seconds = local.tm_gmtoff
         zone = local.tm_zone
     except AttributeError:
-        offset = datetime_.fromtimestamp(timestamp) - datetime_.utcfromtimestamp(
-            timestamp
-        )
+        offset = datetime_.fromtimestamp(timestamp) - datetime_.utcfromtimestamp(timestamp)
         seconds = offset.total_seconds()
         zone = strftime("%Z")
 

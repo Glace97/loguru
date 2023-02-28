@@ -54,13 +54,7 @@ def test_foreground_colors(text, expected):
         ),
         (
             "<b>1</b>2<d>3</d>",
-            Style.BRIGHT
-            + "1"
-            + Style.RESET_ALL
-            + "2"
-            + Style.DIM
-            + "3"
-            + Style.RESET_ALL,
+            Style.BRIGHT + "1" + Style.RESET_ALL + "2" + Style.DIM + "3" + Style.RESET_ALL,
         ),
         (
             "0<b>1<d>2</d>3</b>4",
@@ -122,12 +116,7 @@ def test_permissive_parsing(text, expected):
         ("<red>foo</>", Fore.RED + "foo" + Style.RESET_ALL),
         (
             "<green><bold>bar</></green>",
-            Fore.GREEN
-            + Style.BRIGHT
-            + "bar"
-            + Style.RESET_ALL
-            + Fore.GREEN
-            + Style.RESET_ALL,
+            Fore.GREEN + Style.BRIGHT + "bar" + Style.RESET_ALL + Fore.GREEN + Style.RESET_ALL,
         ),
         (
             "a<yellow>b<b>c</>d</>e",
@@ -188,9 +177,7 @@ def test_unbalanced_error(text, strip):
         parse(text, strip=strip)
 
 
-@pytest.mark.parametrize(
-    "text", ["<b>", "<Y><b></b>", "<b><b></b>", "<fg red>1<fg red>"]
-)
+@pytest.mark.parametrize("text", ["<b>", "<Y><b></b>", "<b><b></b>", "<fg red>1<fg red>"])
 @pytest.mark.parametrize("strip", [True, False])
 def test_unclosed_error(text, strip):
     with pytest.raises(ValueError):

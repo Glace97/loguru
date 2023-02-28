@@ -19,7 +19,7 @@ def test_limit_log_once(writer):
     assert lines[-1] == overflow_msg
 
 
-def test_limit_log_n_times(writer):
+def test_limit_log_N_times(writer):
     # Check the logs are printed maximum of N times up until time limit is reached
     # And that new logs are printed after a new start_time is set
     n = 10
@@ -92,7 +92,9 @@ def test_limit_timestamps_full(writer):
 
 def test_limit_no_overflow_msg_provided(writer):
     logger.add(writer, format="{message}")
-    limit_logger = logger.limit(frequency_limit=1, time_limit=1)
+    limit_logger = logger.limit(
+        frequency_limit=1, time_limit=1
+    )
     default_overflow_msg = "Overflow, future logs will be suppressed"
     for _ in range(3):
         limit_logger.debug("test")

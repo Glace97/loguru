@@ -57,12 +57,7 @@ def test_devnull(rep):
 @repetitions
 @pytest.mark.parametrize(
     "sink_from_path",
-    [
-        str,
-        pathlib.Path,
-        lambda path: open(path, "a"),
-        lambda path: pathlib.Path(path).open("a"),
-    ],
+    [str, pathlib.Path, lambda path: open(path, "a"), lambda path: pathlib.Path(path).open("a")],
 )
 def test_file_sink(rep, sink_from_path, tmp_path):
     file = tmp_path / "test.log"
@@ -148,13 +143,7 @@ def test_flush(rep):
 
 def test_file_sink_ascii_encoding(tmp_path):
     file = tmp_path / "test.log"
-    logger.add(
-        file,
-        encoding="ascii",
-        format="{message}",
-        errors="backslashreplace",
-        catch=False,
-    )
+    logger.add(file, encoding="ascii", format="{message}", errors="backslashreplace", catch=False)
     logger.info("天")
     logger.remove()
     assert file.read_text("ascii") == "\\u5929\n"
