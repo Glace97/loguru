@@ -194,7 +194,9 @@ def freeze_time(monkeypatch):
 
     def patched_open(filepath, *args, **kwargs):
         if not os.path.exists(filepath):
-            tz = datetime.timezone(datetime.timedelta(seconds=fakes["offset"]), name=fakes["zone"])
+            tz = datetime.timezone(
+                datetime.timedelta(seconds=fakes["offset"]), name=fakes["zone"]
+            )
             ctimes[filepath] = datetime.datetime.now().replace(tzinfo=tz).timestamp()
         return builtins_open(filepath, *args, **kwargs)
 
@@ -205,7 +207,11 @@ def freeze_time(monkeypatch):
         # For this reason, we re-implement date parsing here to properly handle aware date using
         # the optional "tz_offset" argument.
         if isinstance(date, str):
-            for accepted_format in ["%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"]:
+            for accepted_format in [
+                "%Y-%m-%d",
+                "%Y-%m-%d %H:%M:%S",
+                "%Y-%m-%d %H:%M:%S.%f",
+            ]:
                 try:
                     date = datetime.datetime.strptime(date, accepted_format)
                     break

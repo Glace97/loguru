@@ -30,13 +30,17 @@ def test_file_object(tmp_path):
 def test_file_str(tmp_path):
     path = str(tmp_path / "test.log")
     logger.add(path)
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink='%s')]>" % path
+    assert (
+        repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink='%s')]>" % path
+    )
 
 
 def test_file_pathlib(tmp_path):
     path = str(tmp_path / "test.log")
     logger.add(pathlib.Path(path))
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink='%s')]>" % path
+    assert (
+        repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink='%s')]>" % path
+    )
 
 
 def test_stream_object():
@@ -63,7 +67,9 @@ def test_stream_object_without_name_attr():
             return "MyStream()"
 
     logger.add(MyStream())
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=MyStream())]>"
+    assert (
+        repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=MyStream())]>"
+    )
 
 
 def test_stream_object_with_empty_name():
@@ -78,7 +84,9 @@ def test_stream_object_with_empty_name():
             return "MyStream2()"
 
     logger.add(MyStream2())
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=MyStream2())]>"
+    assert (
+        repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=MyStream2())]>"
+    )
 
 
 def test_function():
@@ -86,7 +94,9 @@ def test_function():
         pass
 
     logger.add(my_function)
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=my_function)]>"
+    assert (
+        repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=my_function)]>"
+    )
 
 
 def test_callable_without_name():
@@ -98,7 +108,10 @@ def test_callable_without_name():
             return "<FunctionWithout>"
 
     logger.add(Function())
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=<FunctionWithout>)]>"
+    assert (
+        repr(logger)
+        == "<loguru.logger handlers=[(id=0, level=10, sink=<FunctionWithout>)]>"
+    )
 
 
 def test_callable_with_empty_name():
@@ -112,7 +125,10 @@ def test_callable_with_empty_name():
             return "<FunctionEmpty>"
 
     logger.add(Function())
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=<FunctionEmpty>)]>"
+    assert (
+        repr(logger)
+        == "<loguru.logger handlers=[(id=0, level=10, sink=<FunctionEmpty>)]>"
+    )
 
 
 def test_coroutine_function():
@@ -120,7 +136,10 @@ def test_coroutine_function():
         pass
 
     logger.add(my_async_function)
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=my_async_function)]>"
+    assert (
+        repr(logger)
+        == "<loguru.logger handlers=[(id=0, level=10, sink=my_async_function)]>"
+    )
 
 
 def test_coroutine_callable_without_name():
@@ -133,7 +152,8 @@ def test_coroutine_callable_without_name():
 
     logger.add(CoroutineFunction())
     assert (
-        repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=<AsyncFunctionWithout>)]>"
+        repr(logger)
+        == "<loguru.logger handlers=[(id=0, level=10, sink=<AsyncFunctionWithout>)]>"
     )
 
 
@@ -148,7 +168,10 @@ def test_coroutine_function_with_empty_name():
             return "<AsyncFunctionEmpty>"
 
     logger.add(CoroutineFunction())
-    assert repr(logger) == "<loguru.logger handlers=[(id=0, level=10, sink=<AsyncFunctionEmpty>)]>"
+    assert (
+        repr(logger)
+        == "<loguru.logger handlers=[(id=0, level=10, sink=<AsyncFunctionEmpty>)]>"
+    )
 
 
 def test_standard_handler():

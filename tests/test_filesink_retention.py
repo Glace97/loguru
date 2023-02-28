@@ -9,7 +9,9 @@ from loguru import logger
 from .conftest import check_dir
 
 
-@pytest.mark.parametrize("retention", ["1 hour", "1H", " 1 h ", datetime.timedelta(hours=1)])
+@pytest.mark.parametrize(
+    "retention", ["1 hour", "1H", " 1 h ", datetime.timedelta(hours=1)]
+)
 def test_retention_time(freeze_time, tmp_path, retention):
     i = logger.add(tmp_path / "test.log.x", retention=retention)
     logger.debug("test")
@@ -165,7 +167,9 @@ def test_manage_formatted_files(freeze_time, tmp_path):
 
         a = logger.add(tmp_path / "temp/{time:YYYY}/file.log", retention=0)
         b = logger.add(tmp_path / "temp/file{time:YYYY}.log", retention=0)
-        c = logger.add(tmp_path / "temp/d{time:YYYY}/f{time:YYYY}.{time:YYYY}.log", retention=0)
+        c = logger.add(
+            tmp_path / "temp/d{time:YYYY}/f{time:YYYY}.{time:YYYY}.log", retention=0
+        )
 
         logger.debug("test")
 
@@ -294,7 +298,9 @@ def test_exception_during_retention_at_rotation(freeze_time, tmp_path, capsys, d
 
 
 @pytest.mark.parametrize("delay", [True, False])
-def test_exception_during_retention_at_rotation_not_caught(freeze_time, tmp_path, capsys, delay):
+def test_exception_during_retention_at_rotation_not_caught(
+    freeze_time, tmp_path, capsys, delay
+):
     with freeze_time("2022-02-22") as frozen:
         logger.add(
             tmp_path / "test.log",
@@ -352,7 +358,17 @@ def test_invalid_retention(retention):
 
 @pytest.mark.parametrize(
     "retention",
-    ["W5", "monday at 14:00", "sunday", "nope", "5 MB", "3 hours 2 dayz", "d", "H", "__dict__"],
+    [
+        "W5",
+        "monday at 14:00",
+        "sunday",
+        "nope",
+        "5 MB",
+        "3 hours 2 dayz",
+        "d",
+        "H",
+        "__dict__",
+    ],
 )
 def test_unkown_retention(retention):
     with pytest.raises(ValueError):

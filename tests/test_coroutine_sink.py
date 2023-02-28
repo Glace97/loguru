@@ -85,7 +85,9 @@ def test_recursive_coroutine(capsys):
     assert sorted(out.splitlines()) == sorted("%d!" % i for i in range(1, 10))
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop")
+@pytest.mark.skipif(
+    sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop"
+)
 def test_using_another_event_loop(capsys):
     async def worker():
         logger.debug("A message")
@@ -117,7 +119,9 @@ def test_run_mutiple_different_loops(capsys):
     assert out == "Message 1\nMessage 2\n"
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop")
+@pytest.mark.skipif(
+    sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop"
+)
 def test_run_multiple_same_loop(capsys):
     async def worker(i):
         logger.debug("Message {}", i)
@@ -181,7 +185,9 @@ def test_global_loop_not_used(capsys):
     assert out == ""
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop")
+@pytest.mark.skipif(
+    sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop"
+)
 def test_complete_in_another_run(capsys):
     async def worker_1():
         logger.debug("A")
@@ -420,7 +426,9 @@ def test_exception_in_coroutine_during_complete_not_caught(capsys, caplog):
     assert str(exc_value) == "Oh no"
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop")
+@pytest.mark.skipif(
+    sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop"
+)
 def test_enqueue_coroutine_loop(capsys):
     loop = asyncio.new_event_loop()
     logger.add(async_writer, enqueue=True, loop=loop, format="{message}", catch=False)
@@ -440,7 +448,9 @@ def test_enqueue_coroutine_from_inside_coroutine_without_loop(capsys):
     loop = asyncio.new_event_loop()
 
     async def worker():
-        logger.add(async_writer, enqueue=True, loop=None, format="{message}", catch=False)
+        logger.add(
+            async_writer, enqueue=True, loop=None, format="{message}", catch=False
+        )
         logger.info("A")
         await logger.complete()
 
@@ -476,7 +486,9 @@ def test_custom_complete_function(capsys):
     assert awaited
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop")
+@pytest.mark.skipif(
+    sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop"
+)
 @pytest.mark.parametrize("loop_is_none", [True, False])
 def test_complete_from_another_loop(capsys, loop_is_none):
     main_loop = asyncio.new_event_loop()
@@ -528,7 +540,9 @@ def test_complete_from_multiple_threads_loop_is_none(capsys):
         t.join()
 
     out, err = capsys.readouterr()
-    assert sorted(out.splitlines()) == ["{:03}".format(i) for i in range(10) for _ in range(100)]
+    assert sorted(out.splitlines()) == [
+        "{:03}".format(i) for i in range(10) for _ in range(100)
+    ]
     assert err == ""
 
 
@@ -562,7 +576,9 @@ def test_complete_from_multiple_threads_loop_is_not_none(capsys):
     loop.run_until_complete(complete())
 
     out, err = capsys.readouterr()
-    assert sorted(out.splitlines()) == ["{:03}".format(i) for i in range(10) for _ in range(100)]
+    assert sorted(out.splitlines()) == [
+        "{:03}".format(i) for i in range(10) for _ in range(100)
+    ]
     assert err == ""
 
 
@@ -611,7 +627,9 @@ def test_complete_with_sub_processes(monkeypatch, capsys):
     assert writer.output == "Child\n"
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop")
+@pytest.mark.skipif(
+    sys.version_info < (3, 5, 3), reason="Coroutine can't access running loop"
+)
 def test_invalid_coroutine_sink_if_no_loop_with_enqueue():
     with pytest.raises(ValueError):
         logger.add(async_writer, enqueue=True, loop=None)

@@ -13,7 +13,9 @@ def should_colorize(stream):
 
             ipython = IPython.get_ipython()
             is_jupyter_stream = isinstance(stream, ipykernel.iostream.OutStream)
-            is_jupyter_shell = isinstance(ipython, ipykernel.zmqshell.ZMQInteractiveShell)
+            is_jupyter_shell = isinstance(
+                ipython, ipykernel.zmqshell.ZMQInteractiveShell
+            )
         except Exception:
             pass
         else:

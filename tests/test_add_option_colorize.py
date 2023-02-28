@@ -75,7 +75,9 @@ def patch_colorama(monkeypatch):
 @pytest.mark.parametrize("tty", [True, False])
 @pytest.mark.parametrize("replace_original", [True, False])
 @pytest.mark.skipif(os.name == "nt", reason="Colorama is required on Windows")
-def test_colorize_stream_linux(patch_colorama, monkeypatch, colorize, tty, replace_original):
+def test_colorize_stream_linux(
+    patch_colorama, monkeypatch, colorize, tty, replace_original
+):
     stream = Stream(tty)
 
     monkeypatch.delenv("TERM", raising=False)
@@ -103,7 +105,9 @@ def test_colorize_stream_linux(patch_colorama, monkeypatch, colorize, tty, repla
 @pytest.mark.parametrize("tty", [True, False])
 @pytest.mark.parametrize("replace_original", [True, False])
 @pytest.mark.skipif(os.name != "nt", reason="Only Windows requires Colorama")
-def test_colorize_stream_windows(patch_colorama, monkeypatch, colorize, tty, replace_original):
+def test_colorize_stream_windows(
+    patch_colorama, monkeypatch, colorize, tty, replace_original
+):
     stream = Stream(tty)
 
     monkeypatch.delenv("TERM", raising=False)

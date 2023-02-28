@@ -12,7 +12,8 @@ from .conftest import check_dir
 
 
 @pytest.mark.parametrize(
-    "compression", ["gz", "bz2", "zip", "xz", "lzma", "tar", "tar.gz", "tar.bz2", "tar.xz"]
+    "compression",
+    ["gz", "bz2", "zip", "xz", "lzma", "tar", "tar.gz", "tar.bz2", "tar.xz"],
 )
 def test_compression_ext(tmp_path, compression):
     i = logger.add(tmp_path / "file.log", compression=compression)
@@ -35,7 +36,11 @@ def test_compression_function(tmp_path):
 def test_compression_at_rotation(tmp_path, mode, freeze_time):
     with freeze_time("2010-10-09 11:30:59"):
         logger.add(
-            tmp_path / "file.log", format="{message}", rotation=0, compression="gz", mode=mode
+            tmp_path / "file.log",
+            format="{message}",
+            rotation=0,
+            compression="gz",
+            mode=mode,
         )
         logger.debug("After compression")
 
@@ -59,7 +64,9 @@ def test_compression_at_remove_without_rotation(tmp_path, mode):
 
 @pytest.mark.parametrize("mode", ["a", "a+", "w", "x"])
 def test_no_compression_at_remove_with_rotation(tmp_path, mode):
-    i = logger.add(tmp_path / "test.log", compression="gz", rotation="100 MB", mode=mode)
+    i = logger.add(
+        tmp_path / "test.log", compression="gz", rotation="100 MB", mode=mode
+    )
     logger.debug("test")
     logger.remove(i)
 
@@ -78,14 +85,19 @@ def test_rename_existing_with_creation_time(tmp_path, freeze_time):
 
     check_dir(
         tmp_path,
-        files=[("test.2018-01-01_00-00-00_000000.log.tar.gz", None), ("test.log.tar.gz", None)],
+        files=[
+            ("test.2018-01-01_00-00-00_000000.log.tar.gz", None),
+            ("test.log.tar.gz", None),
+        ],
     )
 
 
 def test_renaming_compression_dest_exists(freeze_time, tmp_path):
     with freeze_time("2019-01-02 03:04:05.000006"):
         for i in range(4):
-            logger.add(tmp_path / "rotate.log", compression=".tar.gz", format="{message}")
+            logger.add(
+                tmp_path / "rotate.log", compression=".tar.gz", format="{message}"
+            )
             logger.info(str(i))
             logger.remove()
 
@@ -103,7 +115,11 @@ def test_renaming_compression_dest_exists(freeze_time, tmp_path):
 def test_renaming_compression_dest_exists_with_time(freeze_time, tmp_path):
     with freeze_time("2019-01-02 03:04:05.000006"):
         for i in range(4):
-            logger.add(tmp_path / "rotate.{time}.log", compression=".tar.gz", format="{message}")
+            logger.add(
+                tmp_path / "rotate.{time}.log",
+                compression=".tar.gz",
+                format="{message}",
+            )
             logger.info(str(i))
             logger.remove()
 
@@ -111,9 +127,18 @@ def test_renaming_compression_dest_exists_with_time(freeze_time, tmp_path):
         tmp_path,
         files=[
             ("rotate.2019-01-02_03-04-05_000006.log.tar.gz", None),
-            ("rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.log.tar.gz", None),
-            ("rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.2.log.tar.gz", None),
-            ("rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.3.log.tar.gz", None),
+            (
+                "rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.log.tar.gz",
+                None,
+            ),
+            (
+                "rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.2.log.tar.gz",
+                None,
+            ),
+            (
+                "rotate.2019-01-02_03-04-05_000006.2019-01-02_03-04-05_000006.3.log.tar.gz",
+                None,
+            ),
         ],
     )
 
@@ -126,14 +151,19 @@ def test_compression_use_renamed_file_after_rotation(tmp_path, freeze_time):
 
     with freeze_time("2020-01-02"):
         logger.add(
-            tmp_path / "test.log", format="{message}", compression=compression, rotation=rotation
+            tmp_path / "test.log",
+            format="{message}",
+            compression=compression,
+            rotation=rotation,
         )
 
         logger.info("Before")
         logger.bind(rotate=True).info("Rotation")
         logger.info("After")
 
-    compression.assert_called_once_with(str(tmp_path / "test.2020-01-02_00-00-00_000000.log"))
+    compression.assert_called_once_with(
+        str(tmp_path / "test.2020-01-02_00-00-00_000000.log")
+    )
 
     check_dir(
         tmp_path,
@@ -160,7 +190,10 @@ def test_threaded_compression_after_rotation(tmp_path):
         return message.record["extra"].get("rotate", False)
 
     logger.add(
-        tmp_path / "test.log", format="{message}", compression=compression, rotation=rotation
+        tmp_path / "test.log",
+        format="{message}",
+        compression=compression,
+        rotation=rotation,
     )
 
     logger.info("Before")
@@ -209,7 +242,9 @@ def test_exception_during_compression_at_rotation(freeze_time, tmp_path, capsys,
 
 
 @pytest.mark.parametrize("delay", [True, False])
-def test_exception_during_compression_at_rotation_not_caught(freeze_time, tmp_path, capsys, delay):
+def test_exception_during_compression_at_rotation_not_caught(
+    freeze_time, tmp_path, capsys, delay
+):
     with freeze_time("2017-07-01") as frozen:
         logger.add(
             tmp_path / "test.log",

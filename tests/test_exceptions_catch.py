@@ -37,7 +37,9 @@ def test_no_caret_if_no_backtrace(writer, diagnose):
     assert sum(line.startswith("> ") for line in writer.read().splitlines()) == 0
 
 
-@pytest.mark.parametrize("encoding", ["ascii", "UTF8", None, "unknown-encoding", "", object()])
+@pytest.mark.parametrize(
+    "encoding", ["ascii", "UTF8", None, "unknown-encoding", "", object()]
+)
 def test_sink_encoding(writer, encoding):
     class Writer:
         def __init__(self, encoding):
@@ -48,7 +50,9 @@ def test_sink_encoding(writer, encoding):
             self.output += message
 
     writer = Writer(encoding)
-    logger.add(writer, backtrace=True, diagnose=True, colorize=False, format="", catch=False)
+    logger.add(
+        writer, backtrace=True, diagnose=True, colorize=False, format="", catch=False
+    )
 
     def foo(a, b):
         a / b
@@ -66,7 +70,9 @@ def test_sink_encoding(writer, encoding):
 
 def test_file_sink_ascii_encoding(tmp_path):
     file = tmp_path / "test.log"
-    logger.add(file, format="", encoding="ascii", errors="backslashreplace", catch=False)
+    logger.add(
+        file, format="", encoding="ascii", errors="backslashreplace", catch=False
+    )
     a = "天"
 
     try:
@@ -121,7 +127,9 @@ def test_no_sys_real_prefix(writer, monkeypatch):
 
 
 def test_has_site_getsitepackages(writer, monkeypatch):
-    monkeypatch.setattr(site, "getsitepackages", lambda: ["foo", "bar", "baz"], raising=False)
+    monkeypatch.setattr(
+        site, "getsitepackages", lambda: ["foo", "bar", "baz"], raising=False
+    )
     logger.add(writer, backtrace=False, diagnose=True, colorize=False, format="")
 
     try:
@@ -193,7 +201,9 @@ def test_sysconfig_get_path_return_none(writer, monkeypatch):
 
 
 def test_no_exception(writer):
-    logger.add(writer, backtrace=False, diagnose=False, colorize=False, format="{message}")
+    logger.add(
+        writer, backtrace=False, diagnose=False, colorize=False, format="{message}"
+    )
 
     logger.exception("No Error.")
 
@@ -357,7 +367,9 @@ def test_onerror_with_reraise(writer):
 
 
 def test_decorate_function(writer):
-    logger.add(writer, format="{message}", diagnose=False, backtrace=False, colorize=False)
+    logger.add(
+        writer, format="{message}", diagnose=False, backtrace=False, colorize=False
+    )
 
     @logger.catch
     def a(x):
@@ -368,7 +380,9 @@ def test_decorate_function(writer):
 
 
 def test_decorate_coroutine(writer):
-    logger.add(writer, format="{message}", diagnose=False, backtrace=False, colorize=False)
+    logger.add(
+        writer, format="{message}", diagnose=False, backtrace=False, colorize=False
+    )
 
     @logger.catch
     async def foo(a, b):

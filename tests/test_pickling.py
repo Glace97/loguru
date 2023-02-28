@@ -134,7 +134,9 @@ def test_pickling_standard_handler_root_logger_not_picklable(monkeypatch, capsys
     def reduce_protocol():
         raise TypeError("Not picklable")
 
-    monkeypatch.setattr(logging.getLogger(), "__reduce__", reduce_protocol, raising=False)
+    monkeypatch.setattr(
+        logging.getLogger(), "__reduce__", reduce_protocol, raising=False
+    )
 
     handler = StandardHandler(logging.NOTSET)
     logger.add(handler, format="=> {message}", catch=False)
@@ -173,11 +175,15 @@ def test_pickling_file_handler(tmp_path):
 )
 def test_pickling_file_handler_rotation(tmp_path, rotation):
     file = tmp_path / "test.log"
-    logger.add(file, format="{level} - {function} - {message}", delay=True, rotation=rotation)
+    logger.add(
+        file, format="{level} - {function} - {message}", delay=True, rotation=rotation
+    )
     pickled = pickle.dumps(logger)
     unpickled = pickle.loads(pickled)
     unpickled.debug("A message")
-    assert file.read_text() == "DEBUG - test_pickling_file_handler_rotation - A message\n"
+    assert (
+        file.read_text() == "DEBUG - test_pickling_file_handler_rotation - A message\n"
+    )
 
 
 @pytest.mark.parametrize(
@@ -185,21 +191,33 @@ def test_pickling_file_handler_rotation(tmp_path, rotation):
 )
 def test_pickling_file_handler_retention(tmp_path, retention):
     file = tmp_path / "test.log"
-    logger.add(file, format="{level} - {function} - {message}", delay=True, retention=retention)
+    logger.add(
+        file, format="{level} - {function} - {message}", delay=True, retention=retention
+    )
     pickled = pickle.dumps(logger)
     unpickled = pickle.loads(pickled)
     unpickled.debug("A message")
-    assert file.read_text() == "DEBUG - test_pickling_file_handler_retention - A message\n"
+    assert (
+        file.read_text() == "DEBUG - test_pickling_file_handler_retention - A message\n"
+    )
 
 
 @pytest.mark.parametrize("compression", ["zip", "gz", "tar", compression_function])
 def test_pickling_file_handler_compression(tmp_path, compression):
     file = tmp_path / "test.log"
-    logger.add(file, format="{level} - {function} - {message}", delay=True, compression=compression)
+    logger.add(
+        file,
+        format="{level} - {function} - {message}",
+        delay=True,
+        compression=compression,
+    )
     pickled = pickle.dumps(logger)
     unpickled = pickle.loads(pickled)
     unpickled.debug("A message")
-    assert file.read_text() == "DEBUG - test_pickling_file_handler_compression - A message\n"
+    assert (
+        file.read_text()
+        == "DEBUG - test_pickling_file_handler_compression - A message\n"
+    )
 
 
 def test_pickling_no_handler(writer):
@@ -212,7 +230,9 @@ def test_pickling_no_handler(writer):
 
 def test_pickling_handler_not_serializable():
     logger.add(lambda m: None)
-    with pytest.raises((pickle.PicklingError, AttributeError), match="Can't (pickle|get local)"):
+    with pytest.raises(
+        (pickle.PicklingError, AttributeError), match="Can't (pickle|get local)"
+    ):
         pickle.dumps(logger)
 
 
@@ -262,13 +282,17 @@ def test_pickling_format_function(capsys, colorize):
 
 def test_pickling_filter_function_not_serializable():
     logger.add(print, filter=lambda r: True)
-    with pytest.raises((pickle.PicklingError, AttributeError), match="Can't (pickle|get local)"):
+    with pytest.raises(
+        (pickle.PicklingError, AttributeError), match="Can't (pickle|get local)"
+    ):
         pickle.dumps(logger)
 
 
 def test_pickling_format_function_not_serializable():
     logger.add(print, format=lambda r: "{message}")
-    with pytest.raises((pickle.PicklingError, AttributeError), match="Can't (pickle|get local)"):
+    with pytest.raises(
+        (pickle.PicklingError, AttributeError), match="Can't (pickle|get local)"
+    ):
         pickle.dumps(logger)
 
 

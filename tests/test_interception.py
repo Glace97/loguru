@@ -20,7 +20,9 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
 
 
 def test_formatting(writer):
@@ -97,7 +99,9 @@ def test_multiple_intercept(writer):
 
 
 def test_exception(writer):
-    with make_logging_logger("tests.test_interception", InterceptHandler()) as logging_logger:
+    with make_logging_logger(
+        "tests.test_interception", InterceptHandler()
+    ) as logging_logger:
         logger.add(writer, format="{message}")
 
         try:
@@ -113,7 +117,11 @@ def test_exception(writer):
 
 def test_level_is_no(writer):
     with make_logging_logger("tests", InterceptHandler()) as logging_logger:
-        logger.add(writer, format="<lvl>{level.no} - {level.name} - {message}</lvl>", colorize=True)
+        logger.add(
+            writer,
+            format="<lvl>{level.no} - {level.name} - {message}</lvl>",
+            colorize=True,
+        )
         logging_logger.log(12, "Hop")
 
     result = writer.read()
@@ -124,7 +132,11 @@ def test_level_does_not_exist(writer):
     logging.addLevelName(152, "FANCY_LEVEL")
 
     with make_logging_logger("tests", InterceptHandler()) as logging_logger:
-        logger.add(writer, format="<lvl>{level.no} - {level.name} - {message}</lvl>", colorize=True)
+        logger.add(
+            writer,
+            format="<lvl>{level.no} - {level.name} - {message}</lvl>",
+            colorize=True,
+        )
         logging_logger.log(152, "Nop")
 
     result = writer.read()
@@ -133,7 +145,11 @@ def test_level_does_not_exist(writer):
 
 def test_level_exist_builtin(writer):
     with make_logging_logger("tests", InterceptHandler()) as logging_logger:
-        logger.add(writer, format="<lvl>{level.no} - {level.name} - {message}</lvl>", colorize=True)
+        logger.add(
+            writer,
+            format="<lvl>{level.no} - {level.name} - {message}</lvl>",
+            colorize=True,
+        )
         logging_logger.error("Error...")
 
     result = writer.read()
@@ -145,7 +161,11 @@ def test_level_exists_custom(writer):
     logger.level("ANOTHER_FANCY_LEVEL", no=99, color="<green>", icon="")
 
     with make_logging_logger("tests", InterceptHandler()) as logging_logger:
-        logger.add(writer, format="<lvl>{level.no} - {level.name} - {message}</lvl>", colorize=True)
+        logger.add(
+            writer,
+            format="<lvl>{level.no} - {level.name} - {message}</lvl>",
+            colorize=True,
+        )
         logging_logger.log(99, "Yep!")
 
     result = writer.read()
@@ -158,4 +178,7 @@ def test_using_logging_function(writer):
         logging.warning("ABC")
 
     result = writer.read()
-    assert result == "test_using_logging_function 158 test_interception test_interception.py ABC\n"
+    assert (
+        result
+        == "test_using_logging_function 158 test_interception test_interception.py ABC\n"
+    )
