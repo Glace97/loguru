@@ -98,6 +98,7 @@ from ._handler import Handler
 from ._locks_machinery import create_logger_lock
 from ._recattrs import RecordException, RecordFile, RecordLevel, RecordProcess, RecordThread
 from ._simple_sinks import AsyncSink, CallableSink, StandardSink, StreamSink
+from ._limiter import Limiter
 
 if sys.version_info >= (3, 6):
     from os import PathLike
@@ -217,9 +218,10 @@ class Logger:
     You should not instantiate a |Logger| by yourself, use ``from loguru import logger`` instead.
     """
 
-    def __init__(self, core, exception, depth, record, lazy, colors, raw, capture, patchers, extra):
+    def __init__(self, core, exception, depth, record, lazy, colors, raw, capture, patchers, extra, limit=(None, None)):
         self._core = core
         self._options = (exception, depth, record, lazy, colors, raw, capture, patchers, extra)
+        self._limit = Limiter(limit)
 
     def __repr__(self):
         return "<loguru.logger handlers=%r>" % list(self._core.handlers.values())
@@ -1266,7 +1268,8 @@ class Logger:
         raw=False,
         capture=True,
         depth=0,
-        ansi=False
+        ansi=False,
+        limit=(None, None)
     ):
         r"""Parametrize a logging call to slightly change generated log message.
 
@@ -1353,7 +1356,7 @@ class Logger:
             )
 
         args = self._options[-2:]
-        return Logger(self._core, exception, depth, record, lazy, colors, raw, capture, *args)
+        return Logger(self._core, exception, depth, record, lazy, colors, raw, capture, limit=limit, *args)
 
     def bind(__self, **kwargs):  # noqa: N805
         """Bind attributes to the ``extra`` dict of each logged message record.
@@ -1876,6 +1879,9 @@ class Logger:
     def _log(self, level, from_decorator, options, message, args, kwargs):
         core = self._core
 
+        if self._limit.reached(message):
+            return
+
         if not core.handlers:
             return
 
@@ -2065,3 +2071,12 @@ class Logger:
             "The 'stop()' method is deprecated, please use 'remove()' instead", DeprecationWarning
         )
         return self.remove(*args, **kwargs)
+    
+    def limit(self, count=None, interval=None, unit='m', sliding=False):
+        """
+            Sets limit on current logger
+            limit=(count, time_interval) of limitation
+            per unique message. Does not include level
+        """
+        self._limit = Limiter((count, interval), unit=unit, sliding=sliding)
+        return self
