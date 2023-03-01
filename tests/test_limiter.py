@@ -12,7 +12,7 @@ def test_limiter_count():
     """
         Tests limit count
     """
-    limiter = Limiter(limit=(100, None))
+    limiter = Limiter(limit=100)
     for i in range(1, 1000):
         if limiter.reached('hej'):
             assert i > 99
@@ -23,12 +23,12 @@ def test_limiter_time():
         Tests limiter time
     """
     message = 'hej'
-    limiter = Limiter(limit=(1, 0.005), unit='s') # 0.1 seconds
+    limiter = Limiter(limit=1, interval=0.005) # 0.1 seconds
     assert not limiter.reached(message), 'first'
     assert limiter.reached(message), 'second'
     time.sleep(0.01)
     assert not limiter.reached(message)
-    limiter = Limiter(limit=(1, 0.01), unit='s') # 0.1 seconds
+    limiter = Limiter(limit=1, interval=0.01) # 0.1 seconds
     assert not limiter.reached(message)
     time.sleep(0.005)
     assert limiter.reached(message)
@@ -52,13 +52,14 @@ def test_logger_count_limit():
         Tests count limit of logger limit
     """
     filename, message = _generate_filename_message()
-    logger.limit(count=1)
+    logger.limit(1)
     logger.add(filename)
     assert os.path.exists(filename)
     for _ in range(100):
         logger.info(message)
     _count_lines_that_contains(filename, message, 1)
     os.remove(filename)
+    assert not os.path.exists(filename)
     logger.add(filename)
     assert os.path.exists(filename)
     # No limit
@@ -76,7 +77,7 @@ def test_logger_time_limit():
         Tests time limit of logger limit
     """
     filename, message = _generate_filename_message()
-    logger.limit(count=1, interval=0.01)
+    logger.limit(1, 0.01)
     logger.add(filename)
     assert os.path.exists(filename)
     logger.info(message)
@@ -86,7 +87,7 @@ def test_logger_time_limit():
     os.remove(filename)
     logger.add(filename)
     _count_lines_that_contains(filename, message, 0)
-    logger.limit(count=10, interval=0.1, unit='s')
+    logger.limit(10, 0.1)
     for _ in range(50):
         time.sleep(0.001)
         logger.info(message)
@@ -97,10 +98,10 @@ def test_window():
     """
         Tests window of limiter
     """
-    limiter = Limiter((0, 0.1), unit='s', sliding=True)
+    limiter = Limiter(0, 0.1, True)
     message = _generate_hex()
     assert limiter.reached(message)
-    limiter = Limiter((2, 0.1), unit='s', sliding=True)
+    limiter = Limiter(2, 0.1, True)
     assert not limiter.reached(message)
     time.sleep(0.05)
     assert not limiter.reached(message)
@@ -117,7 +118,7 @@ def test_logger_window(writer):
     assert len(writer.written) == 0
 
     # 1 2  ... 3 | 4 5
-    logger.limit(count=3, interval=0.1, unit='s', sliding=True)
+    logger.limit(3, 0.1, sliding=True)
     logger.add(writer)
     message = _generate_hex()
     # write two instantly
@@ -141,7 +142,7 @@ def test_logger_window(writer):
     assert len(writer.written) == 0
 
     # Now without sliding
-    logger.limit(count=3, interval=0.1, unit='s')
+    logger.limit(3, 0.1, sliding=False)
     message = _generate_hex()
     # write two instantly
     logger.info(message) # 1
@@ -157,3 +158,34 @@ def test_logger_window(writer):
     logger.info(message) # 5
     logger.info(message) # 6
     assert len(writer.written) == 6
+
+def test_logger_limit_copy(writer):
+    """
+        Test limit copy function
+    """
+    # clean writer
+    writer.clear()
+    assert len(writer.written) == 0
+    logger.add(writer)
+    message = _generate_hex()
+    for _ in range(10):
+        logger.info(message)
+    assert len(writer.written) == 10
+    # make a hard copy of handlers
+    new_logger = logger.limit(0, copy=2)
+    for _ in range(10):
+        new_logger.info(message)
+    assert len(writer.written) == 10
+    # now alter to accept 1
+    new_logger.limit(1)
+    for _ in range(10):
+        new_logger.info(message)
+    assert len(writer.written) == 11
+    # testing soft copy, core is not copied
+    new_logger = new_logger.limit(copy=1)
+    for _ in range(10):
+        new_logger.info(message)
+    assert len(writer.written) == 11
+    new_logger.add(writer)
+    new_logger.info(message)
+    assert len(writer.written) == 12

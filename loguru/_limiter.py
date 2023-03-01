@@ -10,21 +10,32 @@ class Limiter:
         A class for tracking information sent
     """
 
-    def __init__(self, limit=(None, None), sliding=False, unit='m'):
+    def __init__(self, limit=None, interval=(None, 's'), sliding=False):
         """
-            Time limit is in minutes, if not unit is stated ['s', 'm', 'h']
+            Time limit is in minutes.
+            Interval is (time [int], unit [s, m, h]) or int for seconds,
+            where default is unit in seconds.
+            sliding sets if the window should be sliding
         """
         self._tracker = {}
-        self._count_limit = limit[0]
-        self._interval = limit[1]
+        self._count_limit = limit
+        self._interval = None
         self._sliding = sliding
-        self._divide = 60.0
-        if unit == 's':
-            self._divide = 1.0
-        elif unit == 'h':
-            self._divide = 3600.0
-        if self._interval is not None:
-            self._interval /= self._divide
+        # Default is seconds
+        self._divide = 1.0
+        if type(interval) == tuple:
+            if len(interval) > 0:
+                self._interval = interval[0]
+            if len(interval) > 1:
+                unit = interval[1]
+                if unit == 'm':
+                    self._divide = 60.0
+                elif unit == 'h':
+                    self._divide = 3600.0
+                if self._interval is not None:
+                    self._interval /= self._divide
+        if type(interval) in [float, int]:
+            self._interval = float(interval)
 
     def _interval_reached(self, info):
         """

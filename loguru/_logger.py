@@ -218,10 +218,10 @@ class Logger:
     You should not instantiate a |Logger| by yourself, use ``from loguru import logger`` instead.
     """
 
-    def __init__(self, core, exception, depth, record, lazy, colors, raw, capture, patchers, extra, limit=(None, None)):
+    def __init__(self, core, exception, depth, record, lazy, colors, raw, capture, patchers, extra, limit=None, interval=(None, 'm', False)):
         self._core = core
         self._options = (exception, depth, record, lazy, colors, raw, capture, patchers, extra)
-        self._limit = Limiter(limit)
+        self._limit = Limiter(limit=limit, interval=interval)
 
     def __repr__(self):
         return "<loguru.logger handlers=%r>" % list(self._core.handlers.values())
@@ -1269,7 +1269,8 @@ class Logger:
         capture=True,
         depth=0,
         ansi=False,
-        limit=(None, None)
+        limit=None,
+        interval=(None, 'm', False)
     ):
         r"""Parametrize a logging call to slightly change generated log message.
 
@@ -1356,7 +1357,7 @@ class Logger:
             )
 
         args = self._options[-2:]
-        return Logger(self._core, exception, depth, record, lazy, colors, raw, capture, limit=limit, *args)
+        return Logger(self._core, exception, depth, record, lazy, colors, raw, capture, limit=limit, interval=interval, *args)
 
     def bind(__self, **kwargs):  # noqa: N805
         """Bind attributes to the ``extra`` dict of each logged message record.
@@ -2072,11 +2073,21 @@ class Logger:
         )
         return self.remove(*args, **kwargs)
     
-    def limit(self, count=None, interval=None, unit='m', sliding=False):
+    def limit(self, count=None, interval=None, sliding=False, copy=0):
         """
             Sets limit on current logger
-            limit=(count, time_interval) of limitation
-            per unique message. Does not include level
+            interval=(time, unit), where unit in ['s', 'm', 'h']
+            Sliding sets sliding window
+            copy = [0, 1, 2], where 0 is modification of current, 1 is 
+            "soft copy", i.e. everything except handlers are copied, and
+            2 is hard copy.
         """
-        self._limit = Limiter((count, interval), unit=unit, sliding=sliding)
-        return self
+        limiter = Limiter(count, interval, sliding)
+        if copy < 1:
+            self._limit = limiter
+            return self
+        # check if soft-copy
+        core = Core() if copy == 1 else self._core
+        new_logger = Logger(core, *self._options)
+        new_logger._limit = limiter
+        return new_logger
