@@ -231,11 +231,9 @@ class Logger:
         patchers,
         extra,
         limit_info=None,
-        time_limit=None,
     ):
         self._core = core
         self._limit_info = limit_info
-        self._time_limit = time_limit
         self._options = (exception, depth, record, lazy, colors, raw, capture, patchers, extra)
 
     def __repr__(self):
@@ -1441,6 +1439,7 @@ class Logger:
             )
 
         limit_info = {
+            "time_limit": time_limit * 60,
             "frequency_limit": frequency_limit,
             "overflow_msg": overflow_msg,
             "frequency": 0,
@@ -1460,7 +1459,6 @@ class Logger:
             capture,
             *args,
             limit_info=limit_info,
-            time_limit=time_limit * 60,
         )
 
     def bind(__self, **kwargs):  # noqa: N805
@@ -1997,7 +1995,7 @@ class Logger:
             # Check oldest timestamp, if it is out of time range,
             # pop it out to make room for a new timestamp
             elapsed_time = time.time() - self._limit_info["timestamps"][0]
-            if elapsed_time > self._time_limit:
+            if elapsed_time > self._limit_info["time_limit"]:
                 self._limit_info["timestamps"].pop(0)
                 # maintain same size for the list of timestamps
                 self._limit_info["timestamps"].append(None)
