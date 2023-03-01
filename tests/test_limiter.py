@@ -124,22 +124,22 @@ def test_logger_window(writer):
     # write two instantly
     logger.info(message)
     logger.info(message)
-    assert len(writer.written) == 2
+    assert _count_in(writer.written, message) == 2
     # one 'lagging'
     time.sleep(0.05)
     logger.info(message)
-    assert len(writer.written) == 3
+    assert _count_in(writer.written, message) == 3
     # sleep sufficiently to pass window
     time.sleep(0.05)
     # should be space for two more now
     logger.info(message)
     logger.info(message)
     logger.info(message)
-    assert len(writer.written) == 5, 'expected window to limit'
+    assert _count_in(writer.written, message) == 5, 'expected window to limit'
 
     # clean writer
     writer.clear()
-    assert len(writer.written) == 0
+    assert _count_in(writer.written, message) == 0
 
     # Now without sliding
     logger.limit(3, 0.1, sliding=False)
@@ -147,17 +147,17 @@ def test_logger_window(writer):
     # write two instantly
     logger.info(message) # 1
     logger.info(message) # 2
-    assert len(writer.written) == 2
+    assert _count_in(writer.written, message) == 2
     # one 'lagging'
     time.sleep(0.05)
     logger.info(message) # 3
-    assert len(writer.written) == 3
+    assert _count_in(writer.written, message) == 3
     # sleep sufficiently to pass window
     time.sleep(0.05)
     logger.info(message) # 4, only 1 in buffer
     logger.info(message) # 5
     logger.info(message) # 6
-    assert len(writer.written) == 6
+    assert _count_in(writer.written, message) == 6
 
 def test_logger_limit_copy(writer):
     """
@@ -170,34 +170,35 @@ def test_logger_limit_copy(writer):
     message = _generate_hex()
     for _ in range(10):
         logger.info(message)
-    assert len(writer.written) == 10
+    assert _count_in(writer.written, message) == 10
     # make a hard copy of handlers
     new_logger = logger.limit(0, copy=2)
     for _ in range(10):
         new_logger.info(message)
-    assert len(writer.written) == 10
+    assert _count_in(writer.written, message) == 10
     # now alter to accept 1
     new_logger.limit(1)
     for _ in range(10):
         new_logger.info(message)
-    assert len(writer.written) == 11
+    assert _count_in(writer.written, message) == 11
     # testing soft copy, core is not copied
     new_logger = new_logger.limit(copy=1)
     for _ in range(10):
         new_logger.info(message)
-    assert len(writer.written) == 11
+    assert _count_in(writer.written, message) == 11
     new_logger.add(writer)
     new_logger.info(message)
-    assert len(writer.written) == 12
+    assert _count_in(writer.written, message) == 12
 
-def _count_in(writer, what) -> int:
+def _count_in(writes, what) -> int:
     count = 0
-    for line in writer.written:
+    written = writes.written if hasattr(writes, 'written') else writes
+    for line in written:
         if what in line:
             count += 1
     return count
 
-def test_limiter_message(writer):
+def test_logger_overflow_message(writer):
     """
         Test limit copy function
     """
@@ -214,3 +215,46 @@ def test_limiter_message(writer):
     logger.info(message)
     assert _count_in(writer, message) == 1, 'expected exactly one message'
     assert _count_in(writer, overflow) == 1, 'expected exactly one overflow message'
+
+def test_logger_levels(writer):
+    """
+        Test limit copy function
+    """
+    # clean writer
+    writer.clear()
+    assert len(writer.written) == 0
+    logger.add(writer)
+    logger.limit(1)
+    message = _generate_hex()
+    # Test all types of logging
+    logger.warning(message)
+    logger.error(message)
+    logger.info(message)
+    logger.trace(message)
+    logger.critical(message)
+    logger.debug(message)
+    logger.exception(message)
+    logger.success(message)
+    assert _count_in(writer, message) == 1, 'expected all logging to be limited'
+    assert len(writer.written) == 1, 'expected one message written'
+
+def test_logger_wipe_limit(writer):
+    """
+        Tests the wiping functionality
+    """
+    # clean writer
+    writer.clear()
+    assert len(writer.written) == 0
+    logger.add(writer)
+    logger.limit(1)
+    message = _generate_hex()
+    # Test all types of logging
+    logger.warning(message)
+    logger.warning(message)
+    logger.warning(message)
+    logger.warning(message)
+    assert _count_in(writer, message) == 1, 'expected reset all to reset count'
+    logger.wipe_limit()
+    logger.warning(message)
+    assert _count_in(writer, message) == 2, 'expected reset all to reset count'
+    assert len(writer.written) == 2

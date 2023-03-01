@@ -2094,3 +2094,9 @@ class Logger:
         new_logger = Logger(core, *self._options)
         new_logger._limit = limiter
         return new_logger
+
+    def wipe_limit(self):
+        """
+            Wipes the limit of the logger
+        """
+        self._limit.wipe()

@@ -55,30 +55,17 @@ class Limiter:
             'c': count
         }
 
-    def reset_all(self):
-        """
-            Resets count for all info stored
-        """
-        for info in self.__tracker:
-            self.__reset_count(info)
-
     def wipe(self):
         """
-            Removes all counting done
+            Wipes the tracker
         """
         self.__tracker = {}
-        self.__interval = None
-        self.__limit = None
 
     def __limit_reached(self, info):
         """
             Check if count limit is reached
         """
-        if info not in self.__tracker:
-            reached = self.__limit is not None or self.__limit == 0
-        else:
-            reached = self.__tracker[info]['c'] > self.__limit
-        return reached
+        return self.__tracker[info]['c'] > self.__limit
 
     def __in_window(self, time_point, current_time):
         """
