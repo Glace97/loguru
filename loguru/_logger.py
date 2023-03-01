@@ -218,10 +218,10 @@ class Logger:
     You should not instantiate a |Logger| by yourself, use ``from loguru import logger`` instead.
     """
 
-    def __init__(self, core, exception, depth, record, lazy, colors, raw, capture, patchers, extra, limit=None, interval=(None, 'm', False)):
+    def __init__(self, core, exception, depth, record, lazy, colors, raw, capture, patchers, extra, limit=None, interval=(None, 'm', False), overflow_msg=None):
         self._core = core
         self._options = (exception, depth, record, lazy, colors, raw, capture, patchers, extra)
-        self._limit = Limiter(limit=limit, interval=interval)
+        self._limit = Limiter(limit=limit, interval=interval, message=overflow_msg)
 
     def __repr__(self):
         return "<loguru.logger handlers=%r>" % list(self._core.handlers.values())
@@ -1270,7 +1270,8 @@ class Logger:
         depth=0,
         ansi=False,
         limit=None,
-        interval=(None, 'm', False)
+        interval=(None, 'm', False),
+        overflow_msg=None
     ):
         r"""Parametrize a logging call to slightly change generated log message.
 
@@ -1357,7 +1358,7 @@ class Logger:
             )
 
         args = self._options[-2:]
-        return Logger(self._core, exception, depth, record, lazy, colors, raw, capture, limit=limit, interval=interval, *args)
+        return Logger(self._core, exception, depth, record, lazy, colors, raw, capture, limit=limit, interval=interval, overflow_msg=overflow_msg, *args)
 
     def bind(__self, **kwargs):  # noqa: N805
         """Bind attributes to the ``extra`` dict of each logged message record.
@@ -1881,7 +1882,9 @@ class Logger:
         core = self._core
 
         if self._limit.reached(message):
-            return
+            message = self._limit.get_overflow_message()
+            if message is None:
+                return
 
         if not core.handlers:
             return
@@ -2073,7 +2076,7 @@ class Logger:
         )
         return self.remove(*args, **kwargs)
     
-    def limit(self, count=None, interval=None, sliding=False, copy=0):
+    def limit(self, count=None, interval=None, sliding=False, message=None, copy=0):
         """
             Sets limit on current logger
             interval=(time, unit), where unit in ['s', 'm', 'h']
@@ -2082,7 +2085,7 @@ class Logger:
             "soft copy", i.e. everything except handlers are copied, and
             2 is hard copy.
         """
-        limiter = Limiter(count, interval, sliding)
+        limiter = Limiter(count, interval, sliding, message=message)
         if copy < 1:
             self._limit = limiter
             return self

@@ -189,3 +189,28 @@ def test_logger_limit_copy(writer):
     new_logger.add(writer)
     new_logger.info(message)
     assert len(writer.written) == 12
+
+def _count_in(writer, what) -> int:
+    count = 0
+    for line in writer.written:
+        if what in line:
+            count += 1
+    return count
+
+def test_limiter_message(writer):
+    """
+        Test limit copy function
+    """
+    # clean writer
+    writer.clear()
+    assert len(writer.written) == 0
+    logger.add(writer)
+    message = _generate_hex()
+    overflow = _generate_hex()
+    logger.limit(1, message=overflow)
+    logger.info(message)
+    assert _count_in(writer, message) == 1
+    logger.info(message)
+    logger.info(message)
+    assert _count_in(writer, message) == 1, 'expected exactly one message'
+    assert _count_in(writer, overflow) == 1, 'expected exactly one overflow message'
