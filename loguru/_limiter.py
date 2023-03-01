@@ -24,18 +24,16 @@ class Limiter:
         self._message = message
         self.__first_reach = False
         # Default is seconds
-        self._divide = 1.0
+        self.__divide = 1.0
         if isinstance(interval, tuple):
             if len(interval) > 0:
                 self.__interval = interval[0]
             if len(interval) > 1:
                 unit = interval[1]
                 if unit == 'm':
-                    self._divide = 60.0
+                    self.__divide = 60.0
                 elif unit == 'h':
-                    self._divide = 3600.0
-                if self.__interval is not None:
-                    self.__interval /= self._divide
+                    self.__divide = 3600.0
         if type(interval) in [float, int]:
             self.__interval = float(interval)
 
@@ -47,11 +45,11 @@ class Limiter:
         """
         if self.__interval is None:
             return False
-        return ((time.time() / self._divide) - self.__tracker[info]['s']) > self.__interval
+        return ((time.time() - self.__tracker[info]['s'])/self.__divide) > self.__interval
 
     def __reset_count(self, info, count=0):
         self.__tracker[info] = {
-            's': time.time() / self._divide,
+            's': time.time(),
             'c': count
         }
 
@@ -88,7 +86,7 @@ class Limiter:
             }
         # check window start
         window_start = 0
-        current_time = time.time() / self._divide
+        current_time = time.time()
         for i, time_point in enumerate(self.__tracker[info]['w']):
             if self.__in_window(time_point, current_time):
                 window_start = i

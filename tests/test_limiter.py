@@ -258,3 +258,31 @@ def test_logger_wipe_limit(writer):
     logger.warning(message)
     assert _count_in(writer, message) == 2, 'expected reset all to reset count'
     assert len(writer.written) == 2
+
+def test_logger_time_min_and_hours(writer):
+    """
+        Tests time limit of logger limit
+    """
+    # test hours
+    logger.limit(1, (0.1/3600.0, 'h'))
+    logger.add(writer)
+    message = _generate_hex()
+    logger.info(message)
+    assert _count_in(writer, message) == 1
+    logger.info(message)
+    assert _count_in(writer, message) == 1
+    time.sleep(0.15)
+    logger.info(message)
+    assert _count_in(writer, message) == 2
+
+    writer.clear()
+    # test minutes
+    logger.limit(1, (0.1/60.0, 'm'))
+    message = _generate_hex()
+    logger.info(message)
+    assert _count_in(writer, message) == 1
+    logger.info(message)
+    assert _count_in(writer, message) == 1
+    time.sleep(0.15)
+    logger.info(message)
+    assert _count_in(writer, message) == 2
