@@ -82,7 +82,7 @@ class Limiter:
         """
         if info not in self.__tracker or 'w' not in self.__tracker[info]:
             self.__tracker[info] = {
-                'w': [] 
+                'w': []
             }
         # check window start
         window_start = 0

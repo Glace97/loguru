@@ -2075,13 +2075,13 @@ class Logger:
             "The 'stop()' method is deprecated, please use 'remove()' instead", DeprecationWarning
         )
         return self.remove(*args, **kwargs)
-    
+
     def limit(self, count=None, interval=None, sliding=False, message=None, copy=0):
         """
             Sets limit on current logger
             interval=(time, unit), where unit in ['s', 'm', 'h']
             Sliding sets sliding window
-            copy = [0, 1, 2], where 0 is modification of current, 1 is 
+            copy = [0, 1, 2], where 0 is modification of current, 1 is
             "soft copy", i.e. everything except handlers are copied, and
             2 is hard copy.
         """
